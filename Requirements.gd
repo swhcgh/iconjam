@@ -26,3 +26,6 @@ extends Node
 #straight points 5 per for an explosion
 #
 #
+#new stuff
+#black blocks
+#guy does jenken and changes color randomly, that's the color to clear black
