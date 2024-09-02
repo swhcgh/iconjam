@@ -16,7 +16,7 @@ var d:float = 0.0
 
 func _process(delta):
 	d += delta
-	if d > 0.4 or (Input.is_action_pressed("ui_down") and d > .03):
+	if (d > (0.42 - (get_node("/root/Main").game_round * .02))) or (Input.is_action_pressed("ui_down") and d > .03):
 		d = 0
 		drop()
 		

@@ -6,11 +6,14 @@ onready var player_piece = $PlayerPiece
 var placement = []
 var total_score:int = 0
 var current_mode = -1
+var game_round = 1
 
 var charge = [0,0,0]
+var timerr
 
 func _ready():
 	
+	utils.connect("PIECE_REMOVAL", self, "update_score")
 	utils.connect("PIECE_REMOVAL", self, "update_score")
 	utils.connect("SET_JENKEN", self, "set_mode")
 	
@@ -18,10 +21,16 @@ func _ready():
 	
 	var timer := Timer.new()
 	timer.one_shot = true
-	timer.wait_time = 5.0
+	timer.wait_time = 3.0
 	timer.connect("timeout", self, "randomize_doll")
 	get_node("/root/Main").add_child(timer)
 	timer.start()
+	
+func _process(delta):
+	if timerr and timerr.time_left < 15.0:
+		$ProgressBar3.value = 15.0 - timerr.time_left
+	else:
+		$ProgressBar3.value = 0
 	
 func _input(event):
 	
@@ -35,15 +44,22 @@ func _input(event):
 		player_piece.rotate_pieces()
 		
 func update_score(score, type):
+
 	total_score += score
 	$Label2.text = str(total_score)
 	
+	if type == -1:
+		return
+		
 	charge[type] += score
 	$Node2D2.get_child(type).value = charge[type]
 	if charge[type] > $Node2D2.get_child(type).max_value:
 		explosion(type)
 	
 func explosion(type):
+	
+	game_round +=1
+	$Label4.text = str(game_round)
 	
 	for a in range(3):
 		charge[a] = 0
@@ -65,15 +81,34 @@ func explosion(type):
 	for a in $Grid2.get_children():
 		if a.type == typenext:
 			explode_set.append(a)
+			
+	var explode_count = explode_set.size()
 	
-	var points = explode_set.size() * explode_set.size()
-	utils.emit_signal("PIECE_REMOVAL", points, explode_set[0].type)
+	var points = explode_count ^ 2
+	utils.emit_signal("PIECE_REMOVAL", points, -1)
 	
 	for a in explode_set:
 		$Grid2.remove_child(a)
 		a.queue_free()
 		
 	#TODO: if type beats godot's current mode, remove black randomly equal to the number of blocks removed
+	if type == current_mode:
+		var bcount = 0
+		var bpieces = []
+		for a in $Grid2.get_children():
+			if a.type == 3:
+				bpieces.append(a)
+		if bpieces.size() < bcount:
+			bpieces.shuffle()
+			for a in range(0, bcount - bpieces.size()):
+				bpieces.pop_back()
+		
+		var bpoints = (bpieces.size() ^ 3) * (timerr.time_left / 15.0)
+		utils.emit_signal("PIECE_REMOVAL", bpoints, -1)
+		
+		for a in bpieces:
+			$Grid2.remove_child(a)
+			a.queue_free()
 		
 	var timer := Timer.new()
 	timer.one_shot = true
@@ -182,12 +217,12 @@ func randomize_doll():
 	
 	get_node("/root/Main/Doll").set_mode(1)
 	
-	var timer := Timer.new()
-	timer.one_shot = true
-	timer.wait_time = 30.0
-	timer.connect("timeout", self, "randomize_doll")
-	get_node("/root/Main").add_child(timer)
-	timer.start()
+	timerr = Timer.new()
+	timerr.one_shot = true
+	timerr.wait_time = 19.0
+	timerr.connect("timeout", self, "randomize_doll")
+	get_node("/root/Main").add_child(timerr)
+	timerr.start()
 
 func set_mode(r):
 	current_mode = r

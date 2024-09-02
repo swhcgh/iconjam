@@ -14,16 +14,20 @@ func _ready():
 
 func randomize_type():
 	
-	type = utils.rng.randi_range(0,3)
+	var rand = utils.rng.randi_range(0,6)
 	
-	if type == 0:
+	if rand < 2:
 		$Sprite.set_modulate(Color(1, .25, .25, 1))
-	elif type == 1:
+		type = 0
+	elif rand < 4:
 		$Sprite.set_modulate(Color(.25, 1, .25, 1))
-	elif type == 2:
+		type = 1
+	elif rand < 6:
 		$Sprite.set_modulate(Color(.25, .25, 1, 1))
-	elif type == 3:
+		type = 2
+	elif rand == 6:
 		$Sprite.set_modulate(Color(.15, .15, .15, 1))
+		type = 3
 
 func align_with_grid():
 	
